@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Browser</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #1a1a1a;
+    --surface2: #222;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f0f0;
+    --muted: #888;
+    --accent: #4f8ef7;
+    --accent2: #7c5cbf;
+    --tag-bg: rgba(79,142,247,0.15);
+    --tag-text: #7ab4ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  header { padding: 1.2rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; background: rgba(13,13,13,0.95); backdrop-filter: blur(8px); z-index: 100; }
+  .logo { font-size: 1.1rem; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  .search-wrap { flex: 1; max-width: 400px; position: relative; }
+  .search-wrap input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem 0.5rem 2.2rem; color: var(--text); font-size: 0.9rem; outline: none; }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-icon { position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1rem; }
+  .ai-btn { margin-left: auto; background: linear-gradient(135deg, #4f8ef7, #7c5cbf); border: none; border-radius: 8px; padding: 0.5rem 1rem; color: #fff; font-size: 0.85rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .ai-btn:hover { opacity: 0.9; }
+
+  .filters { padding: 1rem 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  .filter-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 0.35rem 0.9rem; color: var(--muted); font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .main { display: flex; }
+  .grid-area { flex: 1; padding: 1.5rem 2rem; }
+  .section-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+
+  .tile { background: var(--surface); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
+  .tile:hover { transform: translateY(-3px); border-color: rgba(79,142,247,0.4); }
+  .thumb { aspect-ratio: 16/9; background: var(--surface2); position: relative; overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--surface2); }
+  .play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; }
+  .tile:hover .play-overlay { opacity: 1; }
+  .play-circle { width: 40px; height: 40px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .play-circle svg { width: 16px; height: 16px; fill: #111; margin-left: 2px; }
+  .duration-badge { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.75); border-radius: 4px; padding: 2px 5px; font-size: 0.7rem; color: #fff; }
+  .ai-badge { position: absolute; top: 6px; left: 6px; background: rgba(79,142,247,0.85); border-radius: 4px; padding: 2px 6px; font-size: 0.65rem; color: #fff; font-weight: 600; }
+  .tile-info { padding: 0.75rem; }
+  .tile-title { font-size: 0.88rem; font-weight: 500; line-height: 1.3; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile-meta { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .tile-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { background: var(--tag-bg); color: var(--tag-text); border-radius: 4px; padding: 2px 6px; font-size: 0.68rem; }
+
+  /* AI Panel */
+  .ai-panel { width: 320px; border-left: 1px solid var(--border); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; background: var(--surface); min-height: calc(100vh - 120px); }
+  .ai-panel.hidden { display: none; }
+  .panel-title { font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .panel-title .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .ai-section { background: var(--bg); border-radius: 8px; padding: 0.9rem; border: 1px solid var(--border); }
+  .ai-section h4 { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .ai-input-row { display: flex; gap: 6px; }
+  .ai-input-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.6rem; color: var(--text); font-size: 0.82rem; outline: none; }
+  .ai-input-row input:focus { border-color: var(--accent); }
+  .ai-input-row button { background: var(--accent); border: none; border-radius: 6px; padding: 0.4rem 0.7rem; color: #fff; font-size: 0.82rem; cursor: pointer; white-space: nowrap; }
+  .ai-result { font-size: 0.82rem; color: var(--text); line-height: 1.5; margin-top: 0.5rem; min-height: 40px; }
+  .ai-result .loading { color: var(--muted); font-style: italic; }
+  .collection-item { display: flex; align-items: center; gap: 8px; padding: 0.4rem 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .collection-item:last-child { border-bottom: none; }
+  .collection-item:hover .col-name { color: var(--accent); }
+  .col-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--tag-bg); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
+  .col-name { font-size: 0.82rem; color: var(--text); }
+  .col-count { margin-left: auto; font-size: 0.72rem; color: var(--muted); }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 12px; width: 90vw; max-width: 900px; overflow: hidden; border: 1px solid var(--border); }
+  .modal-player { aspect-ratio: 16/9; background: #000; width: 100%; }
+  .modal-player iframe { width: 100%; height: 100%; border: none; }
+  .modal-meta { padding: 1rem 1.25rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .modal-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
+  .modal-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+  .modal-close { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.8rem; color: var(--text); font-size: 0.82rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .modal-close:hover { background: var(--surface); }
+  .modal-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.5rem; }
+
+  .empty { text-align: center; padding: 4rem 1rem; color: var(--muted); }
+  .empty p { margin-top: 0.5rem; font-size: 0.85rem; }
+
+  @media (max-width: 700px) {
+    .ai-panel { display: none; }
+    header { padding: 0.8rem 1rem; }
+    .grid-area { padding: 1rem; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">media<span>.</span>browser</div>
+  <div class="search-wrap">
+    <span class="search-icon">&#9906;</span>
+    <input type="text" id="searchInput" placeholder="Search titles, tags, descriptions...">
+  </div>
+  <button class="ai-btn" onclick="toggleAI()">&#10024; AI Assistant</button>
+</header>
+
+<div class="filters" id="filterBar"></div>
+
+<div class="main">
+  <div class="grid-area">
+    <div class="section-label" id="sectionLabel">All Videos</div>
+    <div class="grid" id="videoGrid"></div>
+    <div class="empty hidden" id="emptyState">
+      <div style="font-size:2rem">&#127916;</div>
+      <p>No videos match your search.</p>
+    </div>
+  </div>
+  <div class="ai-panel hidden" id="aiPanel">
+    <div class="panel-title"><span class="dot"></span> AI Assistant</div>
+
+    <div class="ai-section">
+      <h4>&#128269; Natural language search</h4>
+      <div class="ai-input-row">
+        <input type="text" id="nlSearch" placeholder="e.g. Home games from spring...">
+        <button onclick="nlSearchVideos()">Ask</button>
+      </div>
+      <div class="ai-result" id="nlResult"></div>
+    </div>
+
+    <div class="ai-section">
+      <h4>&#127991; Auto-tag a video</h4>
+      <div class="ai-input-row">
+        <input type="text" id="tagInput" placeholder="Paste title or description...">
+        <button onclick="autoTag()">Tag</button>
+      </div>
+      <div class="ai-result" id="tagResult"></div>
+    </div>
+
+    <div class="ai-section">
+      <h4>&#128193; AI Collections</h4>
+      <div id="collectionsResult">
+        <div style="font-size:0.82rem;color:var(--muted)">Click below to auto-group your videos.</div>
+        <br>
+        <button style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem;color:var(--text);font-size:0.82rem;cursor:pointer" onclick="buildCollections()">&#10024; Generate Collections</button>
+      </div>
+    </div>
+
+    <div class="ai-section">
+      <h4>&#128221; Metadata helper</h4>
+      <div class="ai-input-row">
+        <input type="text" id="metaInput" placeholder="Video title or filename...">
+        <button onclick="fillMeta()">Fill</button>
+      </div>
+      <div class="ai-result" id="metaResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal player -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-player" id="modalPlayer"></div>
+    <div class="modal-meta">
+      <div style="flex:1">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-desc" id="modalDesc"></div>
+        <div class="modal-tags" id="modalTags"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">&#10005; Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CLAUDE_API = "https://api.anthropic.com/v1/messages";
+
+let mediaData = [];
+let activeFilter = "All";
+let searchQuery = "";
+let aiVisible = false;
+
+async function loadMedia() {
+  try {
+    const res = await fetch("media.json");
+    if (!res.ok) throw new Error();
+    mediaData = await res.json();
+  } catch {
+    mediaData = getSampleData();
+  }
+  buildFilters();
+  renderGrid();
+}
+
+function getSampleData() {
+  return [
+    { id: "DRIVE_FILE_ID_1", title: "Spring Tournament — Game 1", description: "Opening game of the spring 2024 tournament. Strong pitching performance.", duration: "12:34", date: "2024-03-15", category: "Tournament", tags: ["spring","tournament","pitching"], thumbnail: "", season: "Spring 2024", opponent: "Georgetown Tigers", location: "Round Rock", fileSize: "1.2 GB" },
+    { id: "DRIVE_FILE_ID_2", title: "Season Highlights Reel", description: "Best plays compiled from the full 2024 season.", duration: "4:20", date: "2024-11-01", category: "Highlights", tags: ["highlights","2024","compilation"], thumbnail: "", season: "2024", location: "Various", fileSize: "620 MB" },
+    { id: "DRIVE_FILE_ID_3", title: "Practice Session — Batting Drills", description: "Focused batting practice with coach feedback.", duration: "22:10", date: "2024-05-10", category: "Practice", tags: ["batting","drills","practice"], thumbnail: "", season: "Spring 2024", location: "Georgetown", fileSize: "2.1 GB" },
+    { id: "DRIVE_FILE_ID_4", title: "Regional Championship — Semifinal", description: "Hard-fought semifinal win. Walk-off in the 7th.", duration: "58:45", date: "2024-07-22", category: "Tournament", tags: ["championship","regional","walkoff"], thumbnail: "", season: "Summer 2024", opponent: "Austin Lightning", location: "Austin", fileSize: "5.4 GB" },
+    { id: "DRIVE_FILE_ID_5", title: "Pitching Mechanics — Slow Motion", description: "Slow-mo breakdown of pitching form for coaching review.", duration: "6:15", date: "2024-06-01", category: "Analysis", tags: ["pitching","slow-motion","mechanics","analysis"], thumbnail: "", season: "Summer 2024", location: "Georgetown", fileSize: "800 MB" },
+    { id: "DRIVE_FILE_ID_6", title: "Fall Invitational — Day 2 Games", description: "Back-to-back games during the fall invitational.", duration: "1:45:00", date: "2024-10-05", category: "Tournament", tags: ["fall","invitational","double-header"], thumbnail: "", season: "Fall 2024", opponent: "Multiple", location: "Pflugerville", fileSize: "9.8 GB" },
+  ];
+}
+
+function buildFilters() {
+  const cats = ["All", ...new Set(mediaData.map(v => v.category).filter(Boolean))];
+  const bar = document.getElementById("filterBar");
+  bar.innerHTML = cats.map(c => `<button class="filter-btn${c===activeFilter?' active':''}" onclick="setFilter('${c}')">${c}</button>`).join("");
+}
+
+function setFilter(cat) {
+  activeFilter = cat;
+  buildFilters();
+  renderGrid();
+}
+
+function renderGrid() {
+  const q = searchQuery.toLowerCase();
+  const filtered = mediaData.filter(v => {
+    const matchCat = activeFilter === "All" || v.category === activeFilter;
+    const matchQ = !q || v.title.toLowerCase().includes(q) || (v.description||"").toLowerCase().includes(q) || (v.tags||[]).some(t=>t.includes(q)) || (v.season||"").toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+
+  const grid = document.getElementById("videoGrid");
+  const empty = document.getElementById("emptyState");
+  const label = document.getElementById("sectionLabel");
+
+  label.textContent = activeFilter === "All" ? `All Videos (${filtered.length})` : `${activeFilter} (${filtered.length})`;
+
+  if (!filtered.length) {
+    grid.innerHTML = "";
+    empty.classList.remove("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+
+  grid.innerHTML = filtered.map(v => `
+    <div class="tile" onclick="openVideo('${v.id}')">
+      <div class="thumb">
+        ${v.thumbnail
+          ? `<img src="${v.thumbnail}" alt="${v.title}" loading="lazy">`
+          : `<div class="thumb-placeholder" style="color:rgba(255,255,255,0.1);font-size:2.5rem">&#127916;</div>`}
+        <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+        ${v.duration ? `<div class="duration-badge">${v.duration}</div>` : ""}
+        ${v.aiGrouped ? `<div class="ai-badge">AI</div>` : ""}
+      </div>
+      <div class="tile-info">
+        <div class="tile-title" title="${v.title}">${v.title}</div>
+        <div class="tile-meta">${[v.date, v.season, v.location].filter(Boolean).join(" · ")}</div>
+        <div class="tile-tags">${(v.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openVideo(id) {
+  const v = mediaData.find(x => x.id === id);
+  if (!v) return;
+  document.getElementById("modalPlayer").innerHTML = `<iframe src="https://drive.google.com/file/d/${v.id}/preview" allow="autoplay" allowfullscreen></iframe>`;
+  document.getElementById("modalTitle").textContent = v.title;
+  document.getElementById("modalDesc").textContent = [v.description, v.opponent ? `vs ${v.opponent}` : "", v.location, v.fileSize].filter(Boolean).join("  ·  ");
+  document.getElementById("modalTags").innerHTML = (v.tags||[]).map(t=>`<span class="tag">${t}</span>`).join("");
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById("modalOverlay") || !e.target) {
+    document.getElementById("modalOverlay").classList.remove("open");
+    document.getElementById("modalPlayer").innerHTML = "";
+  }
+}
+
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  searchQuery = e.target.value;
+  renderGrid();
+});
+
+function toggleAI() {
+  aiVisible = !aiVisible;
+  document.getElementById("aiPanel").classList.toggle("hidden", !aiVisible);
+}
+
+async function callClaude(prompt, systemPrompt) {
+  const res = await fetch(CLAUDE_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      system: systemPrompt || "You are a helpful assistant. Be concise.",
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  const data = await res.json();
+  return data.content?.[0]?.text || "";
+}
+
+async function nlSearchVideos() {
+  const q = document.getElementById("nlSearch").value.trim();
+  if (!q) return;
+  const el = document.getElementById("nlResult");
+  el.innerHTML = '<span class="loading">Searching...</span>';
+  const catalog = mediaData.map((v,i) => `${i}: ${v.title} | ${v.season||""} | ${v.category||""} | ${v.tags?.join(",")||""} | ${v.description||""}`).join("\n");
+  const resp = await callClaude(`Video catalog:\n${catalog}\n\nUser query: "${q}"\n\nReturn ONLY a JSON array of matching video indices, e.g. [0, 2, 4]. No explanation.`, "You are a search assistant. Return only JSON arrays.");
+  try {
+    const clean = resp.replace(/```json|```/g, "").trim();
+    const indices = JSON.parse(clean);
+    if (!indices.length) { el.innerHTML = "No matches found."; return; }
+    const titles = indices.map(i => mediaData[i]?.title).filter(Boolean);
+    el.innerHTML = `<strong>${titles.length} match${titles.length>1?"es":""}:</strong><br>${titles.map(t=>`• ${t}`).join("<br>")}`;
+    searchQuery = q;
+    renderGrid();
+  } catch { el.innerHTML = resp; }
+}
+
+async function autoTag() {
+  const input = document.getElementById("tagInput").value.trim();
+  if (!input) return;
+  const el = document.getElementById("tagResult");
+  el.innerHTML = '<span class="loading">Generating tags...</span>';
+  const resp = await callClaude(`Generate metadata tags for this video: "${input}"\n\nReturn ONLY a JSON object with keys: tags (array of 4-6 short tags), category (one of: Tournament, Highlights, Practice, Analysis, Game, Other), suggested_title (if original could be improved).`, "Return only valid JSON with no extra text.");
+  try {
+    const clean = resp.replace(/```json|```/g, "").trim();
+    const data = JSON.parse(clean);
+    el.innerHTML = `<strong>Tags:</strong> ${data.tags?.map(t=>`<span class="tag">${t}</span>`).join(" ")}<br><strong>Category:</strong> ${data.category || "—"}<br>${data.suggested_title ? `<strong>Suggested title:</strong> ${data.suggested_title}` : ""}`;
+  } catch { el.innerHTML = resp; }
+}
+
+async function buildCollections() {
+  const el = document.getElementById("collectionsResult");
+  el.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);font-style:italic">Building collections...</div>';
+  const catalog = mediaData.map((v,i) => `${i}: ${v.title} | ${v.season||""} | ${v.category||""} | ${v.tags?.join(",")||""}`).join("\n");
+  const resp = await callClaude(`Given these videos:\n${catalog}\n\nGroup them into 3-5 themed collections. Return ONLY JSON array of objects with: name, emoji, videoIndices (array), reason (1 short sentence).`, "Return only valid JSON with no extra text.");
+  try {
+    const clean = resp.replace(/```json|```/g, "").trim();
+    const cols = JSON.parse(clean);
+    el.innerHTML = cols.map(c => `
+      <div class="collection-item" onclick="filterByCollection(${JSON.stringify(c.videoIndices)}, '${c.name}')">
+        <div class="col-icon">${c.emoji||"📁"}</div>
+        <div>
+          <div class="col-name">${c.name}</div>
+          <div style="font-size:0.72rem;color:var(--muted)">${c.reason||""}</div>
+        </div>
+        <div class="col-count">${c.videoIndices?.length||0} videos</div>
+      </div>
+    `).join("");
+  } catch { el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted)">${resp}</div>`; }
+}
+
+function filterByCollection(indices, name) {
+  const ids = indices.map(i => mediaData[i]?.id).filter(Boolean);
+  mediaData.forEach(v => { v.aiGrouped = ids.includes(v.id); });
+  const grid = document.getElementById("videoGrid");
+  const label = document.getElementById("sectionLabel");
+  label.textContent = `AI Collection: ${name} (${ids.length})`;
+  activeFilter = "All";
+  searchQuery = "";
+  buildFilters();
+  const matching = mediaData.filter(v => ids.includes(v.id));
+  grid.innerHTML = matching.map(v => `
+    <div class="tile" onclick="openVideo('${v.id}')">
+      <div class="thumb">
+        ${v.thumbnail ? `<img src="${v.thumbnail}" alt="${v.title}" loading="lazy">` : `<div class="thumb-placeholder" style="color:rgba(255,255,255,0.1);font-size:2.5rem">&#127916;</div>`}
+        <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+        ${v.duration ? `<div class="duration-badge">${v.duration}</div>` : ""}
+        <div class="ai-badge">AI</div>
+      </div>
+      <div class="tile-info">
+        <div class="tile-title" title="${v.title}">${v.title}</div>
+        <div class="tile-meta">${[v.date, v.season, v.location].filter(Boolean).join(" · ")}</div>
+        <div class="tile-tags">${(v.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function fillMeta() {
+  const input = document.getElementById("metaInput").value.trim();
+  if (!input) return;
+  const el = document.getElementById("metaResult");
+  el.innerHTML = '<span class="loading">Filling metadata...</span>';
+  const resp = await callClaude(`Generate full metadata for a video titled: "${input}"\n\nReturn ONLY a JSON object with: description (1-2 sentences), tags (array of 5-6 tags), category, season (guess if applicable), suggested_date (if inferable from title, else null).`, "Return only valid JSON with no extra text.");
+  try {
+    const clean = resp.replace(/```json|```/g, "").trim();
+    const d = JSON.parse(clean);
+    el.innerHTML = `<strong>Desc:</strong> ${d.description||"—"}<br><strong>Tags:</strong> ${d.tags?.map(t=>`<span class="tag">${t}</span>`).join(" ")}<br><strong>Category:</strong> ${d.category||"—"}${d.season?`<br><strong>Season:</strong> ${d.season}`:""}`;
+  } catch { el.innerHTML = resp; }
+}
+
+loadMedia();
+</script>
+</body>
+</html>
