@@ -6,35 +6,29 @@
 <title>Media Browser</title>
 <style>
   :root {
-    --bg: #0d0d0d;
-    --surface: #1a1a1a;
-    --surface2: #222;
-    --border: rgba(255,255,255,0.08);
-    --text: #f0f0f0;
-    --muted: #888;
-    --accent: #4f8ef7;
-    --accent2: #7c5cbf;
-    --tag-bg: rgba(79,142,247,0.15);
-    --tag-text: #7ab4ff;
+    --bg: #0d0d0d; --surface: #1a1a1a; --surface2: #222;
+    --border: rgba(255,255,255,0.08); --text: #f0f0f0; --muted: #888;
+    --accent: #4f8ef7; --tag-bg: rgba(79,142,247,0.15); --tag-text: #7ab4ff;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
 
   header { padding: 1.2rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; background: rgba(13,13,13,0.95); backdrop-filter: blur(8px); z-index: 100; }
-  .logo { font-size: 1.1rem; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .logo { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.02em; }
   .logo span { color: var(--accent); }
   .search-wrap { flex: 1; max-width: 400px; position: relative; }
-  .search-wrap input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem 0.5rem 2.2rem; color: var(--text); font-size: 0.9rem; outline: none; }
+  .search-wrap input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem 0.5rem 2rem; color: var(--text); font-size: 0.9rem; outline: none; }
   .search-wrap input:focus { border-color: var(--accent); }
   .search-wrap input::placeholder { color: var(--muted); }
-  .search-icon { position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1rem; }
-  .ai-btn { margin-left: auto; background: linear-gradient(135deg, #4f8ef7, #7c5cbf); border: none; border-radius: 8px; padding: 0.5rem 1rem; color: #fff; font-size: 0.85rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .search-icon { position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.9rem; }
+  .ai-btn { margin-left: auto; background: linear-gradient(135deg, #4f8ef7, #7c5cbf); border: none; border-radius: 8px; padding: 0.5rem 1rem; color: #fff; font-size: 0.85rem; font-weight: 500; cursor: pointer; white-space: nowrap; }
   .ai-btn:hover { opacity: 0.9; }
 
-  .filters { padding: 1rem 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
-  .filter-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 0.35rem 0.9rem; color: var(--muted); font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+  .filters { padding: 0.85rem 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); align-items: center; }
+  .filter-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 0.3rem 0.85rem; color: var(--muted); font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
   .filter-btn:hover { border-color: var(--accent); color: var(--text); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .folder-badge { font-size: 0.75rem; color: var(--muted); margin-left: auto; }
 
   .main { display: flex; }
   .grid-area { flex: 1; padding: 1.5rem 2rem; }
@@ -45,62 +39,62 @@
   .tile:hover { transform: translateY(-3px); border-color: rgba(79,142,247,0.4); }
   .thumb { aspect-ratio: 16/9; background: var(--surface2); position: relative; overflow: hidden; }
   .thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--surface2); }
+  .thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.08); font-size: 2.5rem; }
   .play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; }
   .tile:hover .play-overlay { opacity: 1; }
   .play-circle { width: 40px; height: 40px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
   .play-circle svg { width: 16px; height: 16px; fill: #111; margin-left: 2px; }
-  .duration-badge { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.75); border-radius: 4px; padding: 2px 5px; font-size: 0.7rem; color: #fff; }
+  .dur-badge { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.75); border-radius: 4px; padding: 2px 5px; font-size: 0.7rem; color: #fff; }
   .ai-badge { position: absolute; top: 6px; left: 6px; background: rgba(79,142,247,0.85); border-radius: 4px; padding: 2px 6px; font-size: 0.65rem; color: #fff; font-weight: 600; }
+  .folder-label { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.65); border-radius: 4px; padding: 2px 6px; font-size: 0.65rem; color: #ccc; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tile-info { padding: 0.75rem; }
   .tile-title { font-size: 0.88rem; font-weight: 500; line-height: 1.3; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tile-meta { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .tile-meta { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; }
   .tile-tags { display: flex; flex-wrap: wrap; gap: 4px; }
   .tag { background: var(--tag-bg); color: var(--tag-text); border-radius: 4px; padding: 2px 6px; font-size: 0.68rem; }
 
-  /* AI Panel */
-  .ai-panel { width: 320px; border-left: 1px solid var(--border); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; background: var(--surface); min-height: calc(100vh - 120px); }
+  .ai-panel { width: 310px; border-left: 1px solid var(--border); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; background: var(--surface); }
   .ai-panel.hidden { display: none; }
-  .panel-title { font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; }
-  .panel-title .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .ai-section { background: var(--bg); border-radius: 8px; padding: 0.9rem; border: 1px solid var(--border); }
-  .ai-section h4 { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
-  .ai-input-row { display: flex; gap: 6px; }
-  .ai-input-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.6rem; color: var(--text); font-size: 0.82rem; outline: none; }
-  .ai-input-row input:focus { border-color: var(--accent); }
-  .ai-input-row button { background: var(--accent); border: none; border-radius: 6px; padding: 0.4rem 0.7rem; color: #fff; font-size: 0.82rem; cursor: pointer; white-space: nowrap; }
-  .ai-result { font-size: 0.82rem; color: var(--text); line-height: 1.5; margin-top: 0.5rem; min-height: 40px; }
+  .panel-title { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+  .ai-sec { background: var(--bg); border-radius: 8px; padding: 0.9rem; border: 1px solid var(--border); }
+  .ai-sec h4 { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .ai-row { display: flex; gap: 6px; }
+  .ai-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.6rem; color: var(--text); font-size: 0.82rem; outline: none; }
+  .ai-row input:focus { border-color: var(--accent); }
+  .ai-row button, .ai-wide-btn { background: var(--accent); border: none; border-radius: 6px; padding: 0.4rem 0.7rem; color: #fff; font-size: 0.82rem; cursor: pointer; white-space: nowrap; }
+  .ai-wide-btn { width: 100%; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); margin-top: 0.4rem; }
+  .ai-wide-btn:hover { border-color: var(--accent); }
+  .ai-result { font-size: 0.82rem; color: var(--text); line-height: 1.5; margin-top: 0.5rem; }
   .ai-result .loading { color: var(--muted); font-style: italic; }
-  .collection-item { display: flex; align-items: center; gap: 8px; padding: 0.4rem 0; border-bottom: 1px solid var(--border); cursor: pointer; }
-  .collection-item:last-child { border-bottom: none; }
-  .collection-item:hover .col-name { color: var(--accent); }
-  .col-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--tag-bg); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
-  .col-name { font-size: 0.82rem; color: var(--text); }
+  .col-item { display: flex; align-items: center; gap: 8px; padding: 0.4rem 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .col-item:last-child { border-bottom: none; }
+  .col-item:hover .col-name { color: var(--accent); }
+  .col-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--tag-bg); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+  .col-name { font-size: 0.82rem; }
   .col-count { margin-left: auto; font-size: 0.72rem; color: var(--muted); }
 
-  /* Modal */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; align-items: center; justify-content: center; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 999; align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
   .modal { background: var(--surface); border-radius: 12px; width: 90vw; max-width: 900px; overflow: hidden; border: 1px solid var(--border); }
-  .modal-player { aspect-ratio: 16/9; background: #000; width: 100%; }
-  .modal-player iframe { width: 100%; height: 100%; border: none; }
+  .modal-player { aspect-ratio: 16/9; background: #000; }
+  .modal-player iframe { width: 100%; height: 100%; border: none; display: block; }
   .modal-meta { padding: 1rem 1.25rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
   .modal-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
-  .modal-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
-  .modal-close { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.8rem; color: var(--text); font-size: 0.82rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-  .modal-close:hover { background: var(--surface); }
+  .modal-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .modal-close { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.8rem; color: var(--text); font-size: 0.82rem; cursor: pointer; flex-shrink: 0; }
   .modal-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.5rem; }
 
-  .empty { text-align: center; padding: 4rem 1rem; color: var(--muted); }
-  .empty p { margin-top: 0.5rem; font-size: 0.85rem; }
+  .status { text-align: center; padding: 4rem 1rem; color: var(--muted); font-size: 0.9rem; }
+  .status.error { color: #f07; }
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 0.75rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  @media (max-width: 700px) {
-    .ai-panel { display: none; }
-    header { padding: 0.8rem 1rem; }
-    .grid-area { padding: 1rem; }
-    .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-  }
+  /* config banner */
+  .config-banner { background: rgba(79,142,247,0.1); border: 1px solid rgba(79,142,247,0.3); border-radius: 8px; padding: 1rem 1.25rem; margin: 1.5rem 2rem 0; font-size: 0.85rem; line-height: 1.6; }
+  .config-banner code { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 1px 5px; font-family: monospace; font-size: 0.82rem; color: #7ab4ff; }
+  .config-banner.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -109,55 +103,61 @@
   <div class="logo">media<span>.</span>browser</div>
   <div class="search-wrap">
     <span class="search-icon">&#9906;</span>
-    <input type="text" id="searchInput" placeholder="Search titles, tags, descriptions...">
+    <input type="text" id="searchInput" placeholder="Search videos...">
   </div>
   <button class="ai-btn" onclick="toggleAI()">&#10024; AI Assistant</button>
 </header>
 
-<div class="filters" id="filterBar"></div>
+<div class="filters" id="filterBar">
+  <button class="filter-btn active">All</button>
+  <span class="folder-badge" id="folderBadge"></span>
+</div>
+
+<div class="config-banner" id="configBanner">
+  &#128274; <strong>Two things to configure at the top of this file:</strong><br>
+  1. Set <code>FOLDER_ID</code> to your Google Drive parent folder ID (from the URL)<br>
+  2. Set <code>API_KEY</code> to your Google Drive API key (restricted to this domain)<br>
+  Then make the folder <strong>Anyone with the link → Viewer</strong> and redeploy.
+</div>
 
 <div class="main">
   <div class="grid-area">
-    <div class="section-label" id="sectionLabel">All Videos</div>
+    <div class="section-label" id="sectionLabel">Loading...</div>
+    <div id="statusMsg" class="status"><div class="spinner"></div><br>Connecting to Google Drive...</div>
     <div class="grid" id="videoGrid"></div>
-    <div class="empty hidden" id="emptyState">
-      <div style="font-size:2rem">&#127916;</div>
-      <p>No videos match your search.</p>
-    </div>
   </div>
   <div class="ai-panel hidden" id="aiPanel">
     <div class="panel-title"><span class="dot"></span> AI Assistant</div>
 
-    <div class="ai-section">
+    <div class="ai-sec">
       <h4>&#128269; Natural language search</h4>
-      <div class="ai-input-row">
-        <input type="text" id="nlSearch" placeholder="e.g. Home games from spring...">
+      <div class="ai-row">
+        <input type="text" id="nlSearch" placeholder="e.g. home games from spring...">
         <button onclick="nlSearchVideos()">Ask</button>
       </div>
       <div class="ai-result" id="nlResult"></div>
     </div>
 
-    <div class="ai-section">
+    <div class="ai-sec">
       <h4>&#127991; Auto-tag a video</h4>
-      <div class="ai-input-row">
+      <div class="ai-row">
         <input type="text" id="tagInput" placeholder="Paste title or description...">
         <button onclick="autoTag()">Tag</button>
       </div>
       <div class="ai-result" id="tagResult"></div>
     </div>
 
-    <div class="ai-section">
+    <div class="ai-sec">
       <h4>&#128193; AI Collections</h4>
       <div id="collectionsResult">
-        <div style="font-size:0.82rem;color:var(--muted)">Click below to auto-group your videos.</div>
-        <br>
-        <button style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem;color:var(--text);font-size:0.82rem;cursor:pointer" onclick="buildCollections()">&#10024; Generate Collections</button>
+        <div style="font-size:0.82rem;color:var(--muted)">Auto-group your videos by theme.</div>
+        <button class="ai-wide-btn" onclick="buildCollections()">&#10024; Generate Collections</button>
       </div>
     </div>
 
-    <div class="ai-section">
+    <div class="ai-sec">
       <h4>&#128221; Metadata helper</h4>
-      <div class="ai-input-row">
+      <div class="ai-row">
         <input type="text" id="metaInput" placeholder="Video title or filename...">
         <button onclick="fillMeta()">Fill</button>
       </div>
@@ -166,7 +166,6 @@
   </div>
 </div>
 
-<!-- Modal player -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal">
     <div class="modal-player" id="modalPlayer"></div>
@@ -182,130 +181,204 @@
 </div>
 
 <script>
+/* ============================================================
+   CONFIG — update these two values before deploying
+   ============================================================ */
+const FOLDER_ID = "YOUR_PARENT_FOLDER_ID";   // Google Drive folder ID
+const API_KEY   = "YOUR_GOOGLE_API_KEY";      // Drive API key (restricted to this domain)
+/* ============================================================ */
+
+const DRIVE_API  = "https://www.googleapis.com/drive/v3";
 const CLAUDE_API = "https://api.anthropic.com/v1/messages";
+const VIDEO_MIME = ["video/mp4","video/quicktime","video/x-msvideo","video/webm","video/x-matroska","video/mpeg"];
 
-let mediaData = [];
+let allVideos   = [];
 let activeFilter = "All";
-let searchQuery = "";
-let aiVisible = false;
+let searchQuery  = "";
+let aiVisible    = false;
+let folderMap    = {};   // folderId -> folderName
 
+/* ---- Drive helpers ---- */
+async function driveList(q, fields, pageToken) {
+  const params = new URLSearchParams({
+    q, fields, key: API_KEY, pageSize: 1000,
+    ...(pageToken ? { pageToken } : {})
+  });
+  const res = await fetch(`${DRIVE_API}/files?${params}`);
+  if (!res.ok) throw new Error(`Drive API ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+function fmtDuration(ms) {
+  if (!ms) return "";
+  const s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
+  return h ? `${h}:${String(m%60).padStart(2,"0")}:${String(s%60).padStart(2,"0")}` : `${m}:${String(s%60).padStart(2,"0")}`;
+}
+
+function fmtSize(bytes) {
+  if (!bytes) return "";
+  const b = parseInt(bytes);
+  if (b > 1e9) return `${(b/1e9).toFixed(1)} GB`;
+  if (b > 1e6) return `${(b/1e6).toFixed(0)} MB`;
+  return `${(b/1e3).toFixed(0)} KB`;
+}
+
+function cleanName(name) {
+  return name.replace(/\.[^.]+$/, "").replace(/[_\-]/g, " ").trim();
+}
+
+/* ---- Load folder tree ---- */
 async function loadMedia() {
-  try {
-    const res = await fetch("media.json");
-    if (!res.ok) throw new Error();
-    mediaData = await res.json();
-  } catch {
-    mediaData = getSampleData();
+  const configured = FOLDER_ID !== "YOUR_PARENT_FOLDER_ID" && API_KEY !== "YOUR_GOOGLE_API_KEY";
+  document.getElementById("configBanner").classList.toggle("hidden", configured);
+
+  if (!configured) {
+    showStatus("Demo mode — configure FOLDER_ID and API_KEY to load your Drive folder.", false);
+    allVideos = getDemoData();
+    buildFilters();
+    renderGrid();
+    return;
   }
-  buildFilters();
-  renderGrid();
+
+  try {
+    showStatus("Scanning folder...", false);
+
+    /* 1. Get subfolders of parent */
+    const subRes = await driveList(
+      `'${FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      "files(id,name)"
+    );
+    subRes.files.forEach(f => { folderMap[f.id] = f.name; });
+    const subIds = subRes.files.map(f => f.id);
+
+    /* 2. Build query — videos in parent OR any subfolder */
+    const parentQ = `'${FOLDER_ID}' in parents and trashed=false`;
+    const subQ = subIds.map(id => `'${id}' in parents`).join(" or ");
+    const fullQ = subIds.length
+      ? `(${parentQ} or ${subQ}) and (${VIDEO_MIME.map(m=>`mimeType='${m}'`).join(" or ")})`
+      : `${parentQ} and (${VIDEO_MIME.map(m=>`mimeType='${m}'`).join(" or ")})`;
+
+    const fields = "nextPageToken,files(id,name,description,size,createdTime,modifiedTime,thumbnailLink,videoMediaMetadata,parents)";
+
+    let files = [], pt;
+    do {
+      const r = await driveList(fullQ, fields, pt);
+      files.push(...(r.files||[]));
+      pt = r.nextPageToken;
+    } while (pt);
+
+    if (!files.length) { showStatus("No video files found in this folder.", false); return; }
+
+    allVideos = files.map(f => ({
+      id: f.id,
+      title: cleanName(f.name),
+      rawName: f.name,
+      description: f.description || "",
+      size: fmtSize(f.size),
+      date: f.createdTime ? f.createdTime.slice(0,10) : "",
+      modified: f.modifiedTime ? f.modifiedTime.slice(0,10) : "",
+      thumbnail: f.thumbnailLink || "",
+      duration: fmtDuration(f.videoMediaMetadata?.durationMillis),
+      width: f.videoMediaMetadata?.width || "",
+      height: f.videoMediaMetadata?.height || "",
+      resolution: f.videoMediaMetadata?.width ? `${f.videoMediaMetadata.width}×${f.videoMediaMetadata.height}` : "",
+      folder: f.parents ? (folderMap[f.parents.find(p => folderMap[p])] || "Root") : "Root",
+      tags: [],
+      aiGrouped: false
+    }));
+
+    document.getElementById("folderBadge").textContent = `${allVideos.length} videos · ${subIds.length} subfolders`;
+    showStatus("", false);
+    buildFilters();
+    renderGrid();
+  } catch (err) {
+    showStatus(`Error loading Drive: ${err.message}`, true);
+  }
 }
 
-function getSampleData() {
-  return [
-    { id: "DRIVE_FILE_ID_1", title: "Spring Tournament — Game 1", description: "Opening game of the spring 2024 tournament. Strong pitching performance.", duration: "12:34", date: "2024-03-15", category: "Tournament", tags: ["spring","tournament","pitching"], thumbnail: "", season: "Spring 2024", opponent: "Georgetown Tigers", location: "Round Rock", fileSize: "1.2 GB" },
-    { id: "DRIVE_FILE_ID_2", title: "Season Highlights Reel", description: "Best plays compiled from the full 2024 season.", duration: "4:20", date: "2024-11-01", category: "Highlights", tags: ["highlights","2024","compilation"], thumbnail: "", season: "2024", location: "Various", fileSize: "620 MB" },
-    { id: "DRIVE_FILE_ID_3", title: "Practice Session — Batting Drills", description: "Focused batting practice with coach feedback.", duration: "22:10", date: "2024-05-10", category: "Practice", tags: ["batting","drills","practice"], thumbnail: "", season: "Spring 2024", location: "Georgetown", fileSize: "2.1 GB" },
-    { id: "DRIVE_FILE_ID_4", title: "Regional Championship — Semifinal", description: "Hard-fought semifinal win. Walk-off in the 7th.", duration: "58:45", date: "2024-07-22", category: "Tournament", tags: ["championship","regional","walkoff"], thumbnail: "", season: "Summer 2024", opponent: "Austin Lightning", location: "Austin", fileSize: "5.4 GB" },
-    { id: "DRIVE_FILE_ID_5", title: "Pitching Mechanics — Slow Motion", description: "Slow-mo breakdown of pitching form for coaching review.", duration: "6:15", date: "2024-06-01", category: "Analysis", tags: ["pitching","slow-motion","mechanics","analysis"], thumbnail: "", season: "Summer 2024", location: "Georgetown", fileSize: "800 MB" },
-    { id: "DRIVE_FILE_ID_6", title: "Fall Invitational — Day 2 Games", description: "Back-to-back games during the fall invitational.", duration: "1:45:00", date: "2024-10-05", category: "Tournament", tags: ["fall","invitational","double-header"], thumbnail: "", season: "Fall 2024", opponent: "Multiple", location: "Pflugerville", fileSize: "9.8 GB" },
-  ];
+function showStatus(msg, isError) {
+  const el = document.getElementById("statusMsg");
+  if (!msg) { el.style.display = "none"; return; }
+  el.style.display = "block";
+  el.className = "status" + (isError ? " error" : "");
+  el.innerHTML = isError ? `&#9888; ${msg}` : `<div class="spinner"></div><br>${msg}`;
 }
 
+/* ---- Filters (by subfolder / category) ---- */
 function buildFilters() {
-  const cats = ["All", ...new Set(mediaData.map(v => v.category).filter(Boolean))];
+  const folders = ["All", ...new Set(allVideos.map(v => v.folder).filter(Boolean).sort())];
   const bar = document.getElementById("filterBar");
-  bar.innerHTML = cats.map(c => `<button class="filter-btn${c===activeFilter?' active':''}" onclick="setFilter('${c}')">${c}</button>`).join("");
+  bar.innerHTML = folders.map(f =>
+    `<button class="filter-btn${f===activeFilter?" active":""}" onclick="setFilter('${f.replace(/'/g,"\\'")}')">${f}</button>`
+  ).join("") + `<span class="folder-badge" id="folderBadge">${allVideos.length} videos</span>`;
 }
 
-function setFilter(cat) {
-  activeFilter = cat;
-  buildFilters();
-  renderGrid();
-}
+function setFilter(f) { activeFilter = f; buildFilters(); renderGrid(); }
 
+/* ---- Render grid ---- */
 function renderGrid() {
   const q = searchQuery.toLowerCase();
-  const filtered = mediaData.filter(v => {
-    const matchCat = activeFilter === "All" || v.category === activeFilter;
-    const matchQ = !q || v.title.toLowerCase().includes(q) || (v.description||"").toLowerCase().includes(q) || (v.tags||[]).some(t=>t.includes(q)) || (v.season||"").toLowerCase().includes(q);
-    return matchCat && matchQ;
+  const filtered = allVideos.filter(v => {
+    const matchF = activeFilter === "All" || v.folder === activeFilter;
+    const matchQ = !q || v.title.toLowerCase().includes(q) || v.description.toLowerCase().includes(q) || (v.tags||[]).some(t=>t.includes(q)) || v.folder.toLowerCase().includes(q);
+    return matchF && matchQ;
   });
 
   const grid = document.getElementById("videoGrid");
-  const empty = document.getElementById("emptyState");
-  const label = document.getElementById("sectionLabel");
+  document.getElementById("sectionLabel").textContent =
+    activeFilter === "All" ? `All Videos (${filtered.length})` : `${activeFilter} (${filtered.length})`;
 
-  label.textContent = activeFilter === "All" ? `All Videos (${filtered.length})` : `${activeFilter} (${filtered.length})`;
-
-  if (!filtered.length) {
-    grid.innerHTML = "";
-    empty.classList.remove("hidden");
-    return;
-  }
-  empty.classList.add("hidden");
+  if (!filtered.length) { grid.innerHTML = `<div style="color:var(--muted);font-size:0.85rem;padding:2rem 0">No videos match.</div>`; return; }
 
   grid.innerHTML = filtered.map(v => `
     <div class="tile" onclick="openVideo('${v.id}')">
       <div class="thumb">
-        ${v.thumbnail
-          ? `<img src="${v.thumbnail}" alt="${v.title}" loading="lazy">`
-          : `<div class="thumb-placeholder" style="color:rgba(255,255,255,0.1);font-size:2.5rem">&#127916;</div>`}
+        ${v.thumbnail ? `<img src="${v.thumbnail}" alt="" loading="lazy">` : `<div class="thumb-placeholder">&#127916;</div>`}
         <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
-        ${v.duration ? `<div class="duration-badge">${v.duration}</div>` : ""}
+        ${v.duration ? `<div class="dur-badge">${v.duration}</div>` : ""}
         ${v.aiGrouped ? `<div class="ai-badge">AI</div>` : ""}
+        ${v.folder !== "Root" ? `<div class="folder-label">${v.folder}</div>` : ""}
       </div>
       <div class="tile-info">
         <div class="tile-title" title="${v.title}">${v.title}</div>
-        <div class="tile-meta">${[v.date, v.season, v.location].filter(Boolean).join(" · ")}</div>
+        <div class="tile-meta">${[v.date, v.resolution, v.size].filter(Boolean).join(" · ")}</div>
         <div class="tile-tags">${(v.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
       </div>
     </div>
   `).join("");
 }
 
+/* ---- Modal player ---- */
 function openVideo(id) {
-  const v = mediaData.find(x => x.id === id);
+  const v = allVideos.find(x => x.id === id);
   if (!v) return;
   document.getElementById("modalPlayer").innerHTML = `<iframe src="https://drive.google.com/file/d/${v.id}/preview" allow="autoplay" allowfullscreen></iframe>`;
   document.getElementById("modalTitle").textContent = v.title;
-  document.getElementById("modalDesc").textContent = [v.description, v.opponent ? `vs ${v.opponent}` : "", v.location, v.fileSize].filter(Boolean).join("  ·  ");
+  document.getElementById("modalDesc").textContent = [v.description, v.folder !== "Root" ? v.folder : "", v.resolution, v.size, v.date].filter(Boolean).join("  ·  ");
   document.getElementById("modalTags").innerHTML = (v.tags||[]).map(t=>`<span class="tag">${t}</span>`).join("");
   document.getElementById("modalOverlay").classList.add("open");
 }
 
 function closeModal(e) {
-  if (!e || e.target === document.getElementById("modalOverlay") || !e.target) {
+  if (!e || e.target === document.getElementById("modalOverlay")) {
     document.getElementById("modalOverlay").classList.remove("open");
     document.getElementById("modalPlayer").innerHTML = "";
   }
 }
 
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+document.getElementById("searchInput").addEventListener("input", e => { searchQuery = e.target.value; renderGrid(); });
+function toggleAI() { aiVisible = !aiVisible; document.getElementById("aiPanel").classList.toggle("hidden", !aiVisible); }
 
-document.getElementById("searchInput").addEventListener("input", e => {
-  searchQuery = e.target.value;
-  renderGrid();
-});
-
-function toggleAI() {
-  aiVisible = !aiVisible;
-  document.getElementById("aiPanel").classList.toggle("hidden", !aiVisible);
-}
-
-async function callClaude(prompt, systemPrompt) {
+/* ---- Claude API ---- */
+async function callClaude(prompt, system) {
   const res = await fetch(CLAUDE_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system: systemPrompt || "You are a helpful assistant. Be concise.",
-      messages: [{ role: "user", content: prompt }]
-    })
+    body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: system||"Be concise.", messages: [{ role: "user", content: prompt }] })
   });
-  const data = await res.json();
-  return data.content?.[0]?.text || "";
+  const d = await res.json();
+  return d.content?.[0]?.text || "";
 }
 
 async function nlSearchVideos() {
@@ -313,91 +386,89 @@ async function nlSearchVideos() {
   if (!q) return;
   const el = document.getElementById("nlResult");
   el.innerHTML = '<span class="loading">Searching...</span>';
-  const catalog = mediaData.map((v,i) => `${i}: ${v.title} | ${v.season||""} | ${v.category||""} | ${v.tags?.join(",")||""} | ${v.description||""}`).join("\n");
-  const resp = await callClaude(`Video catalog:\n${catalog}\n\nUser query: "${q}"\n\nReturn ONLY a JSON array of matching video indices, e.g. [0, 2, 4]. No explanation.`, "You are a search assistant. Return only JSON arrays.");
+  const catalog = allVideos.map((v,i) => `${i}: ${v.title} | ${v.folder} | ${v.date} | ${v.tags?.join(",")}`).join("\n");
+  const resp = await callClaude(`Catalog:\n${catalog}\n\nQuery: "${q}"\n\nReturn ONLY a JSON array of matching indices, e.g. [0,2,4].`, "Return only JSON arrays.");
   try {
-    const clean = resp.replace(/```json|```/g, "").trim();
-    const indices = JSON.parse(clean);
-    if (!indices.length) { el.innerHTML = "No matches found."; return; }
-    const titles = indices.map(i => mediaData[i]?.title).filter(Boolean);
-    el.innerHTML = `<strong>${titles.length} match${titles.length>1?"es":""}:</strong><br>${titles.map(t=>`• ${t}`).join("<br>")}`;
-    searchQuery = q;
-    renderGrid();
+    const ids = JSON.parse(resp.replace(/```json|```/g,"").trim());
+    const titles = ids.map(i => allVideos[i]?.title).filter(Boolean);
+    el.innerHTML = titles.length ? `<strong>${titles.length} match${titles.length>1?"es":""}:</strong><br>${titles.map(t=>`• ${t}`).join("<br>")}` : "No matches found.";
+    if (titles.length) { searchQuery = q; renderGrid(); }
   } catch { el.innerHTML = resp; }
 }
 
 async function autoTag() {
-  const input = document.getElementById("tagInput").value.trim();
-  if (!input) return;
+  const v = document.getElementById("tagInput").value.trim();
+  if (!v) return;
   const el = document.getElementById("tagResult");
-  el.innerHTML = '<span class="loading">Generating tags...</span>';
-  const resp = await callClaude(`Generate metadata tags for this video: "${input}"\n\nReturn ONLY a JSON object with keys: tags (array of 4-6 short tags), category (one of: Tournament, Highlights, Practice, Analysis, Game, Other), suggested_title (if original could be improved).`, "Return only valid JSON with no extra text.");
+  el.innerHTML = '<span class="loading">Generating...</span>';
+  const resp = await callClaude(`Video: "${v}"\n\nReturn ONLY JSON: { tags: string[], category: string, suggested_title?: string }`, "Return only valid JSON.");
   try {
-    const clean = resp.replace(/```json|```/g, "").trim();
-    const data = JSON.parse(clean);
-    el.innerHTML = `<strong>Tags:</strong> ${data.tags?.map(t=>`<span class="tag">${t}</span>`).join(" ")}<br><strong>Category:</strong> ${data.category || "—"}<br>${data.suggested_title ? `<strong>Suggested title:</strong> ${data.suggested_title}` : ""}`;
+    const d = JSON.parse(resp.replace(/```json|```/g,"").trim());
+    el.innerHTML = `<strong>Tags:</strong> ${d.tags?.map(t=>`<span class="tag">${t}</span>`).join(" ")}<br><strong>Category:</strong> ${d.category||"—"}${d.suggested_title?`<br><strong>Title:</strong> ${d.suggested_title}`:""}`;
   } catch { el.innerHTML = resp; }
 }
 
 async function buildCollections() {
   const el = document.getElementById("collectionsResult");
   el.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);font-style:italic">Building collections...</div>';
-  const catalog = mediaData.map((v,i) => `${i}: ${v.title} | ${v.season||""} | ${v.category||""} | ${v.tags?.join(",")||""}`).join("\n");
-  const resp = await callClaude(`Given these videos:\n${catalog}\n\nGroup them into 3-5 themed collections. Return ONLY JSON array of objects with: name, emoji, videoIndices (array), reason (1 short sentence).`, "Return only valid JSON with no extra text.");
+  const catalog = allVideos.map((v,i) => `${i}: ${v.title} | ${v.folder} | ${v.date} | ${v.tags?.join(",")}`).join("\n");
+  const resp = await callClaude(`Videos:\n${catalog}\n\nGroup into 3-5 themed collections. Return ONLY JSON array: [{name,emoji,videoIndices,reason}]`, "Return only valid JSON.");
   try {
-    const clean = resp.replace(/```json|```/g, "").trim();
-    const cols = JSON.parse(clean);
+    const cols = JSON.parse(resp.replace(/```json|```/g,"").trim());
     el.innerHTML = cols.map(c => `
-      <div class="collection-item" onclick="filterByCollection(${JSON.stringify(c.videoIndices)}, '${c.name}')">
+      <div class="col-item" onclick="filterByCollection(${JSON.stringify(c.videoIndices)},'${c.name.replace(/'/g,"\\'")}')">
         <div class="col-icon">${c.emoji||"📁"}</div>
-        <div>
-          <div class="col-name">${c.name}</div>
-          <div style="font-size:0.72rem;color:var(--muted)">${c.reason||""}</div>
-        </div>
-        <div class="col-count">${c.videoIndices?.length||0} videos</div>
-      </div>
-    `).join("");
+        <div><div class="col-name">${c.name}</div><div style="font-size:0.72rem;color:var(--muted)">${c.reason||""}</div></div>
+        <div class="col-count">${c.videoIndices?.length||0}</div>
+      </div>`).join("");
   } catch { el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted)">${resp}</div>`; }
 }
 
 function filterByCollection(indices, name) {
-  const ids = indices.map(i => mediaData[i]?.id).filter(Boolean);
-  mediaData.forEach(v => { v.aiGrouped = ids.includes(v.id); });
+  const ids = indices.map(i => allVideos[i]?.id).filter(Boolean);
+  allVideos.forEach(v => { v.aiGrouped = ids.includes(v.id); });
+  activeFilter = "All"; searchQuery = ""; buildFilters();
+  document.getElementById("sectionLabel").textContent = `AI Collection: ${name} (${ids.length})`;
   const grid = document.getElementById("videoGrid");
-  const label = document.getElementById("sectionLabel");
-  label.textContent = `AI Collection: ${name} (${ids.length})`;
-  activeFilter = "All";
-  searchQuery = "";
-  buildFilters();
-  const matching = mediaData.filter(v => ids.includes(v.id));
+  const matching = allVideos.filter(v => ids.includes(v.id));
   grid.innerHTML = matching.map(v => `
     <div class="tile" onclick="openVideo('${v.id}')">
       <div class="thumb">
-        ${v.thumbnail ? `<img src="${v.thumbnail}" alt="${v.title}" loading="lazy">` : `<div class="thumb-placeholder" style="color:rgba(255,255,255,0.1);font-size:2.5rem">&#127916;</div>`}
+        ${v.thumbnail?`<img src="${v.thumbnail}" alt="" loading="lazy">`:`<div class="thumb-placeholder">&#127916;</div>`}
         <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
-        ${v.duration ? `<div class="duration-badge">${v.duration}</div>` : ""}
+        ${v.duration?`<div class="dur-badge">${v.duration}</div>`:""}
         <div class="ai-badge">AI</div>
       </div>
       <div class="tile-info">
         <div class="tile-title" title="${v.title}">${v.title}</div>
-        <div class="tile-meta">${[v.date, v.season, v.location].filter(Boolean).join(" · ")}</div>
+        <div class="tile-meta">${[v.date,v.resolution,v.size].filter(Boolean).join(" · ")}</div>
         <div class="tile-tags">${(v.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
       </div>
-    </div>
-  `).join("");
+    </div>`).join("");
 }
 
 async function fillMeta() {
-  const input = document.getElementById("metaInput").value.trim();
-  if (!input) return;
+  const v = document.getElementById("metaInput").value.trim();
+  if (!v) return;
   const el = document.getElementById("metaResult");
-  el.innerHTML = '<span class="loading">Filling metadata...</span>';
-  const resp = await callClaude(`Generate full metadata for a video titled: "${input}"\n\nReturn ONLY a JSON object with: description (1-2 sentences), tags (array of 5-6 tags), category, season (guess if applicable), suggested_date (if inferable from title, else null).`, "Return only valid JSON with no extra text.");
+  el.innerHTML = '<span class="loading">Filling...</span>';
+  const resp = await callClaude(`Video: "${v}"\n\nReturn ONLY JSON: { description: string, tags: string[], category: string, season?: string }`, "Return only valid JSON.");
   try {
-    const clean = resp.replace(/```json|```/g, "").trim();
-    const d = JSON.parse(clean);
+    const d = JSON.parse(resp.replace(/```json|```/g,"").trim());
     el.innerHTML = `<strong>Desc:</strong> ${d.description||"—"}<br><strong>Tags:</strong> ${d.tags?.map(t=>`<span class="tag">${t}</span>`).join(" ")}<br><strong>Category:</strong> ${d.category||"—"}${d.season?`<br><strong>Season:</strong> ${d.season}`:""}`;
   } catch { el.innerHTML = resp; }
+}
+
+/* ---- Demo data (used when not configured) ---- */
+function getDemoData() {
+  return [
+    { id:"demo1", title:"Spring Tournament — Game 1", description:"Opening game.", duration:"12:34", date:"2024-03-15", folder:"Spring 2024", tags:["tournament","pitching"], thumbnail:"", size:"1.2 GB", resolution:"1920×1080", aiGrouped:false },
+    { id:"demo2", title:"Season Highlights Reel", description:"Best plays.", duration:"4:20", date:"2024-11-01", folder:"Highlights", tags:["highlights","compilation"], thumbnail:"", size:"620 MB", resolution:"1920×1080", aiGrouped:false },
+    { id:"demo3", title:"Practice — Batting Drills", description:"Batting practice.", duration:"22:10", date:"2024-05-10", folder:"Practice", tags:["batting","drills"], thumbnail:"", size:"2.1 GB", resolution:"1280×720", aiGrouped:false },
+    { id:"demo4", title:"Regional Championship — Semifinal", description:"Walk-off win.", duration:"58:45", date:"2024-07-22", folder:"Summer 2024", tags:["championship","walkoff"], thumbnail:"", size:"5.4 GB", resolution:"1920×1080", aiGrouped:false },
+    { id:"demo5", title:"Pitching Mechanics — Slow Motion", description:"Form breakdown.", duration:"6:15", date:"2024-06-01", folder:"Analysis", tags:["pitching","mechanics"], thumbnail:"", size:"800 MB", resolution:"3840×2160", aiGrouped:false },
+    { id:"demo6", title:"Fall Invitational — Day 2", description:"Double-header.", duration:"1:45:00", date:"2024-10-05", folder:"Fall 2024", tags:["invitational","double-header"], thumbnail:"", size:"9.8 GB", resolution:"1920×1080", aiGrouped:false },
+  ];
 }
 
 loadMedia();
