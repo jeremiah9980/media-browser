@@ -1,0 +1,53 @@
+<!--
+WORKAROUND PATCH FOR index.html
+
+Remove this old browser-side config:
+
+const FOLDER_ID = "YOUR_PARENT_FOLDER_ID";
+const API_KEY = "YOUR_GOOGLE_API_KEY";
+
+Remove any code that calls:
+https://www.googleapis.com/drive/v3/files
+
+Replace your loader with this static media.json loader.
+-->
+
+<script>
+async function loadMediaFromJson() {
+  const response = await fetch("./media.json", { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(`Could not load media.json: ${response.status}`);
+  }
+
+  const media = await response.json();
+
+  // If your existing app expects a global array:
+  window.MEDIA_ITEMS = media;
+
+  // Replace renderMediaGrid with your existing render function name.
+  renderMediaGrid(media);
+
+  // Optional: rebuild filter tabs from categories.
+  if (typeof buildCategoryTabs === "function") {
+    buildCategoryTabs(media);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadMediaFromJson().catch((error) => {
+    console.error(error);
+    const target =
+      document.querySelector("#app") ||
+      document.querySelector("#mediaGrid") ||
+      document.body;
+
+    target.insertAdjacentHTML(
+      "afterbegin",
+      `<div style="padding:16px;margin:16px;border:1px solid #ef4444;border-radius:12px;color:#fecaca;background:#450a0a">
+        Error loading media.json: ${error.message}
+      </div>`
+    );
+  });
+});
+</script>
